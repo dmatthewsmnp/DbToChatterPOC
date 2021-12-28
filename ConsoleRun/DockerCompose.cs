@@ -21,7 +21,7 @@ internal class DockerCompose : IDisposable, IAsyncDisposable
 	/// </summary>
 	public void Build()
 	{
-		using var dockerBuildProcess = new Process { StartInfo = new ProcessStartInfo("docker", "compose build") };
+		using var dockerBuildProcess = new Process { StartInfo = new ProcessStartInfo("docker", "compose build --progress plain") };
 		dockerBuildProcess.Start();
 		dockerBuildProcess.WaitForExit();
 	}

@@ -13,7 +13,7 @@ BEGIN TRY
 
 	BEGIN TRANSACTION tr_BatchCreateData;
 
-	DECLARE @start int = 1, @end int = 20;
+	DECLARE @start int = 1, @end int = 5;
 	WITH NumberSequence(Number) AS (
 		SELECT @start AS Number
 		UNION ALL
@@ -40,7 +40,7 @@ BEGIN TRY
 	)
 	SELECT @BatchID,
 		'test-chatter', -- Target queue name should be configurable
-		(SELECT o.MessageId, o.SeedVal FOR JSON PATH, WITHOUT_ARRAY_WRAPPER), -- Sample data
+		(SELECT o.MessageId, o.SeedVal, 'Batch' [Method] FOR JSON PATH, WITHOUT_ARRAY_WRAPPER), -- Sample data
 		'application/json',
 		'{"Chatter.ContentType":"application/json","Chatter.CorrelationId":"' + ISNULL(NULLIF(@CorrelationId, ''), CONVERT(varchar(50), NEWID())) + '"}',
 		o.MessageId,

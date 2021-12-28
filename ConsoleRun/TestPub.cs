@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
-using Chatter.MessageBrokers.Reliability.Outbox;
 using Microsoft.Extensions.Logging;
 using MNP.Common.SqlDbUtils.Interfaces;
 using MNP.Common.SqlDbUtils.Models;
@@ -13,20 +11,14 @@ internal class TestPub
 	#region Fields and constructor
 	private readonly ISqlConnectionHandleFactory _sqlFactory;
 	private readonly ILogger _logger;
-	private readonly IBrokeredMessageOutbox _brokeredMessageOutbox;
-	private readonly IOutboxProcessor _outboxProcessor;
 
 	public TestPub(
 		ISqlConnectionHandleFactory sqlFactory,
-		ILogger<TestPub> logger,
-		IBrokeredMessageOutbox brokeredMessageOutbox,
-		IOutboxProcessor outboxProcessor
+		ILogger<TestPub> logger
 	)
 	{
 		_sqlFactory = sqlFactory;
 		_logger = logger;
-		_brokeredMessageOutbox = brokeredMessageOutbox;
-		_outboxProcessor = outboxProcessor;
 	}
 	#endregion
 
@@ -49,20 +41,9 @@ internal class TestPub
 			var retcode = outputparameters.GetReturnCode();
 			#endregion
 
-			if (retcode == 201)
+			if (retcode == 201) // Outbox message created
 			{
-				// Outbox message was created; use outbox broker to retrieve unprocessed messages:
 				_logger.LogDebug("Created data for seed {SeedValue}", i);
-				var messages = await _brokeredMessageOutbox.GetUnprocessedMessagesFromOutbox();
-				if (messages.Any())
-				{
-					// Messages retrieved; iterate through and deliver to destination:
-					_logger.LogInformation("{MessageCount} messages in outbox", messages.Count());
-					foreach (var message in messages.OrderBy(m => m.SentToOutboxAtUtc))
-					{
-						await _outboxProcessor.Process(message);
-					}
-				}
 			}
 			else if (retcode == 204) // Stored procedure chose to ignore this seed value
 			{
@@ -95,7 +76,6 @@ internal class TestPub
 		if (retcode == 201 && batchId != null)
 		{
 			_logger.LogDebug("Created batch {BatchId}", batchId);
-			await _outboxProcessor.ProcessBatch((Guid)batchId);
 		}
 		else // Unexpected return code
 		{
