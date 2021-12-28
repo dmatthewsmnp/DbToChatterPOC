@@ -1,0 +1,9 @@
+services:
+  db:
+    build:
+      context: ../TestDB.Build
+      dockerfile: ./Dockerfile
+      args:
+        PASSWORD: P@ssword12
+    ports:
+      - "1344:1433"
